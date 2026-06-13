@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <title>E2EE Chatterbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Login/Register Section -->
+    <div id="auth-section" class="glass-container active">
+        <h1>Chatterbox</h1>
+        <p>End-to-End Encrypted</p>
+        
+        <button id="install-app-btn" class="hidden" onclick="installApp()" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom: 20px; width: 100%;">Install Mobile App</button>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)">
+            <input type="text" id="username" placeholder="Username" required>
+            <div class="password-container">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="button" class="icon-btn" onclick="togglePasswordVisibility()" title="Show Password">
+                    <svg id="eye-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+            </div>
+            <button type="submit" id="auth-submit-btn">Login</button>
+            <p id="auth-error" class="error-msg"></p>
+        </form>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="chat-section" class="glass-container hidden">
+        <div class="chat-sidebar">
+            <div class="user-profile">
+                <div class="avatar" id="my-avatar">U</div>
+                <div style="display:flex; flex-direction:column; justify-content:center;">
+                    <span id="my-username" style="font-weight:bold;">Username</span>
+                    <span id="my-userid" style="font-size:0.7rem; color:var(--text-muted);">ID: 000000</span>
+                </div>
+                <div id="mobile-bell-container" class="mobile-only" style="position:relative; margin-left:auto; cursor:pointer;" onclick="toggleMobileRequests()">
+                    <span style="font-size:1.5rem;">🔔</span>
+                    <span id="mobile-bell-badge" class="unread-badge hidden" style="position:absolute; top:-5px; right:-10px;">0</span>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:5px; margin-left:auto;" class="desktop-only">
+                    <button onclick="logout()" class="logout-btn">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </button>
+                    <button onclick="deleteAccount()" class="danger-btn" style="font-size:0.7rem;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+            
+            <div class="add-contact-form">
+                <input type="text" id="add-contact-input" placeholder="Enter 6-digit ID">
+                <button type="button" onclick="sendFriendRequest()">Add</button>
+            </div>
+            
+            <div class="contacts-list" id="contacts-list">
+                <div class="list-section" id="friend-requests-section">
+                    <h3 class="desktop-only">Friend Requests</h3>
+                    <div id="requests-list"></div>
+                </div>
+                <div class="list-section">
+                    <h3>Friends</h3>
+                    <div id="friends-list">
+                        <div class="contact-item loading">Loading contacts...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Footer Actions -->
+            <div class="mobile-only" style="padding: 15px; border-top: 1px solid var(--border-glass); display: flex; justify-content: space-between; gap: 10px;">
+                <button onclick="logout()" class="logout-btn" style="margin: 0; flex: 1;">Logout</button>
+                <button onclick="deleteAccount()" class="danger-btn" style="flex: 1;">Delete Account</button>
+            </div>
+        </div>
+        
+        <div class="chat-main">
+            <div class="chat-header" style="justify-content:space-between; display:flex; align-items:center;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button id="mobile-back-btn" class="mobile-back-btn hidden" onclick="closeChat()">❮ Back</button>
+                    <div class="avatar" id="current-chat-avatar">?</div>
+                    <h2 id="current-chat-name">Select a contact</h2>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button id="game-btn" class="chat-action-btn hidden" onclick="openGameSelectionModal()" title="Play a Game">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><path d="M6 12h4m-2-2v4m10-4h.01M16 14h.01"></path></svg>
+                    </button>
+                    <button id="call-btn" class="chat-action-btn hidden" onclick="startCall(false)" title="Voice Call">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </button>
+                    <button id="video-btn" class="chat-action-btn hidden" onclick="startCall(true)" title="Video Call">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    </button>
+                    <button id="hangup-btn" class="danger-btn hidden" onclick="hangUp()" title="Hang Up" style="padding:8px; border-radius:50%;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="23" y1="1" x2="1" y2="23"></line></svg>
+                    </button>
+                    <button id="clear-chat-btn" class="danger-btn hidden" onclick="clearCurrentChat()" title="Clear Chat">Clear Chat</button>
+                    <button id="remove-contact-btn" class="danger-btn hidden" onclick="removeContact()">Remove Friend</button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages go here -->
+                <div class="system-message">Welcome to Chatterbox. Select a user to start an end-to-end encrypted conversation.</div>
+            </div>
+            
+            <form id="message-form" class="message-input-area" onsubmit="sendMessage(event)">
+                <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="sendImage()">
+                <button type="button" id="img-btn" class="chat-action-btn" onclick="document.getElementById('image-upload').click()" disabled>
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </button>
+                <button type="button" id="record-btn" class="chat-action-btn" onclick="toggleRecording()" disabled>
+                    <svg id="record-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
+                <input type="text" id="message-input" placeholder="Type an encrypted message..." disabled>
+                <button type="submit" id="send-btn" disabled>
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+            
+            <!-- Video Overlay -->
+            <div id="video-overlay" class="video-overlay hidden">
+                <video id="remote-video" autoplay playsinline></video>
+                <video id="local-video" autoplay playsinline muted></video>
+                <div class="video-controls">
+                    <button class="icon-btn" onclick="toggleVideoExpand()" title="Expand/Collapse">
+                        <svg id="expand-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Game Overlay -->
+            <div id="game-overlay" class="game-overlay hidden">
+                <div class="game-header">
+                    <h3 id="game-status">Game</h3>
+                    <button class="icon-btn" onclick="closeGame()" title="Close Game">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                
+                <div id="game-scoreboard" class="game-scoreboard hidden">
+                    <span id="my-score-label">You: 0</span>
+                    <span style="opacity: 0.5;">|</span>
+                    <span id="opponent-score-label">Opponent: 0</span>
+                </div>
+                
+                <!-- Tic-Tac-Toe -->
+                <div class="tic-tac-toe-board hidden" id="tic-tac-toe-board">
+                    <div class="cell" onclick="makeMove(0)" id="cell-0"></div>
+                    <div class="cell" onclick="makeMove(1)" id="cell-1"></div>
+                    <div class="cell" onclick="makeMove(2)" id="cell-2"></div>
+                    <div class="cell" onclick="makeMove(3)" id="cell-3"></div>
+                    <div class="cell" onclick="makeMove(4)" id="cell-4"></div>
+                    <div class="cell" onclick="makeMove(5)" id="cell-5"></div>
+                    <div class="cell" onclick="makeMove(6)" id="cell-6"></div>
+                    <div class="cell" onclick="makeMove(7)" id="cell-7"></div>
+                    <div class="cell" onclick="makeMove(8)" id="cell-8"></div>
+                </div>
+
+                <!-- Connect 4 -->
+                <div class="c4-board hidden" id="c4-board">
+                    <!-- Dynamic rendering -->
+                </div>
+
+
+
+                <!-- Dots and Boxes -->
+                <div class="db-board hidden" id="db-board">
+                    <!-- Dynamic rendering -->
+                </div>
+
+                <!-- Checkers -->
+                <div class="chk-board hidden" id="chk-board">
+                    <!-- Dynamic rendering -->
+                </div>
+
+                <!-- Spinning Wheel -->
+                <div class="wheel-board hidden" id="wheel-board" style="display:flex; flex-direction:column; align-items:center;">
+                    <div id="wheel-setup-phase" style="width:100%; max-width:300px; text-align:center;">
+                        <p style="font-weight:bold; margin-bottom:10px;">Enter 3 Options</p>
+                        <input type="text" id="wheel-item-1" placeholder="Option 1" style="width:100%; margin-bottom:5px;">
+                        <input type="text" id="wheel-item-2" placeholder="Option 2" style="width:100%; margin-bottom:5px;">
+                        <input type="text" id="wheel-item-3" placeholder="Option 3" style="width:100%; margin-bottom:10px;">
+                        <button onclick="submitWheelItems()" class="game-select-btn" style="width:100%;">Submit Items</button>
+                    </div>
+                    <div id="wheel-play-phase" class="hidden" style="display:flex; flex-direction:column; align-items:center;">
+                        <div class="wheel-pointer">▼</div>
+                        <div class="wheel" id="wheel">
+                            <div class="wheel-text" id="wheel-text-0" style="transform: rotate(30deg) translate(0, -75px) rotate(-30deg);"></div>
+                            <div class="wheel-text" id="wheel-text-1" style="transform: rotate(90deg) translate(0, -75px) rotate(-90deg);"></div>
+                            <div class="wheel-text" id="wheel-text-2" style="transform: rotate(150deg) translate(0, -75px) rotate(-150deg);"></div>
+                            <div class="wheel-text" id="wheel-text-3" style="transform: rotate(210deg) translate(0, -75px) rotate(-210deg);"></div>
+                            <div class="wheel-text" id="wheel-text-4" style="transform: rotate(270deg) translate(0, -75px) rotate(-270deg);"></div>
+                            <div class="wheel-text" id="wheel-text-5" style="transform: rotate(330deg) translate(0, -75px) rotate(-330deg);"></div>
+                        </div>
+                        <button id="wheel-spin-btn" onclick="makeWheelSpin()" style="margin-top:30px; width:150px;">SPIN!</button>
+                    </div>
+                </div>
+
+                <!-- Rock Paper Scissors -->
+                <div class="rps-board hidden" id="rps-board">
+                    <div class="rps-buttons" id="rps-buttons">
+                        <button class="rps-btn" onclick="makeRpsMove('rock')">🪨</button>
+                        <button class="rps-btn" onclick="makeRpsMove('paper')">📄</button>
+                        <button class="rps-btn" onclick="makeRpsMove('scissors')">✂️</button>
+                    </div>
+                    <div class="rps-result hidden" id="rps-result">
+                        <div class="rps-choice" id="my-rps-choice">?</div>
+                        <div style="font-size:1.5rem; font-weight:bold;">VS</div>
+                        <div class="rps-choice" id="opponent-rps-choice">?</div>
+                    </div>
+                </div>
+
+                <!-- Heads or Tails -->
+                <div class="coin-toss-board hidden" id="coin-toss-board">
+                    <div class="coin-container" id="coin-container">
+                        <div class="coin" id="coin">
+                            <div class="coin-face coin-heads">H</div>
+                            <div class="coin-face coin-tails">T</div>
+                        </div>
+                    </div>
+                    <div class="coin-controls" id="coin-controls">
+                        <button class="coin-btn" onclick="makeCoinChoice('heads')">Call Heads</button>
+                        <button class="coin-btn" onclick="makeCoinChoice('tails')">Call Tails</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Incoming Call Modal -->
+        <div id="incoming-call-modal" class="glass-container hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; padding:30px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.8);">
+            <div class="avatar" id="caller-avatar" style="margin: 0 auto 15px auto; width:60px; height:60px; font-size:2rem;">?</div>
+            <h2 id="caller-name">Someone</h2>
+            <p style="color:var(--text-muted); margin-bottom:20px;">is calling you...</p>
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button onclick="acceptCall()" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">Accept</button>
+                <button onclick="rejectCall()" style="background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">Reject</button>
+            </div>
+        </div>
+        
+        <!-- Game Selection Modal -->
+        <div id="game-selection-modal" class="glass-container hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; padding:30px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;">Select a Game</h2>
+                <button class="icon-btn" onclick="document.getElementById('game-selection-modal').classList.add('hidden')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="game-select-btn" onclick="sendGameInvite('Spinning Wheel')">Spinning Wheel 🎡</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Checkers')">Checkers 🏁</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Dots and Boxes')">Dots and Boxes 🔲</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Connect 4')">Connect 4 🔴🟡</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Tic-Tac-Toe')">Tic-Tac-Toe ❌⭕</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Rock Paper Scissors')">Rock Paper Scissors 🪨📄✂️</button>
+                <button class="game-select-btn" onclick="sendGameInvite('Heads or Tails')">Heads or Tails 🪙</button>
+            </div>
+        </div>
+
+        <!-- Incoming Game Modal -->
+        <div id="incoming-game-modal" class="glass-container hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; padding:30px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.2);">
+            <div class="avatar" id="game-challenger-avatar" style="margin: 0 auto 15px auto; width:60px; height:60px; font-size:2rem;">?</div>
+            <h2 id="game-challenger-name">Someone</h2>
+            <p style="color:var(--text-muted); margin-bottom:20px;">is challenging you to <span id="incoming-game-type" style="font-weight:bold;">a game</span>!</p>
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button onclick="acceptGame()" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">Accept</button>
+                <button onclick="rejectGame()" style="background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">Reject</button>
+            </div>
+        </div>
+        <audio id="remote-audio" autoplay></audio>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/games.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
