@@ -17,8 +17,13 @@ public class FirebaseConfig {
     @Bean
     public Firestore firestore() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            FileInputStream serviceAccount =
-                    new FileInputStream("src/main/resources/firebase-service-account.json");
+            java.io.InputStream serviceAccount;
+            String firebaseCreds = System.getenv("FIREBASE_CREDENTIALS");
+            if (firebaseCreds != null && !firebaseCreds.isEmpty()) {
+                serviceAccount = new java.io.ByteArrayInputStream(firebaseCreds.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            } else {
+                serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
+            }
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
