@@ -619,6 +619,41 @@ button[type="submit"]:active, #send-btn:active {
         flex-direction: column;
         justify-content: center;
     }
+
+    .chat-header {
+        padding: 10px !important;
+        gap: 5px;
+    }
+    
+    #current-chat-name {
+        font-size: 1.2rem;
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .chat-action-btn {
+        padding: 0 5px;
+    }
+    
+    .chat-action-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .mobile-back-btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .chat-header > div:first-child {
+        gap: 8px !important;
+    }
+    
+    .chat-header > div:last-child {
+        gap: 5px !important;
+    }
 }
 
 /* Video Overlay UI */
