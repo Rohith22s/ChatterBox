@@ -262,6 +262,25 @@ async function onMessageReceived(payload) {
         } catch (e) { console.error(e); }
         return; // Don't process further
     }
+    
+    if (message.systemPayload === 'READ_RECEIPT') {
+        if (currentChatUser === message.senderId) {
+            const indicators = document.querySelectorAll('.message.sent .seen-indicator');
+            indicators.forEach(ind => {
+                ind.textContent = ' ✓✓';
+                ind.style.color = '#34b7f1';
+            });
+        }
+        if (chatHistories[message.senderId]) {
+            chatHistories[message.senderId].forEach(msg => {
+                if (msg.type === 'sent') {
+                    msg.status = 'seen';
+                }
+            });
+            saveChatHistories();
+        }
+        return;
+    }
 
     // We received an encrypted message
     try {
@@ -294,6 +313,13 @@ async function onMessageReceived(payload) {
         // If we have the chat open with the sender, append the message
         if (currentChatUser === message.senderId) {
             appendMessage(decryptedContent, 'received');
+            if (stompClient) {
+                stompClient.send("/app/chat", {}, JSON.stringify({
+                    recipientId: message.senderId,
+                    senderId: currentUsername,
+                    systemPayload: 'READ_RECEIPT'
+                }));
+            }
         } else {
             // Increment unread count
             unreadCounts[message.senderId] = (unreadCounts[message.senderId] || 0) + 1;
@@ -458,6 +484,13 @@ async function selectContact(username) {
     if (unreadCounts[username]) {
         unreadCounts[username] = 0;
         renderContacts();
+        if (stompClient) {
+            stompClient.send("/app/chat", {}, JSON.stringify({
+                recipientId: username,
+                senderId: currentUsername,
+                systemPayload: 'READ_RECEIPT'
+            }));
+        }
     }
     
     // Update UI
@@ -474,7 +507,7 @@ async function selectContact(username) {
     document.getElementById('chat-messages').innerHTML = '<div class="system-message">Chat is end-to-end encrypted.</div>';
     
     if (chatHistories[username]) {
-        chatHistories[username].forEach(msg => appendMessage(msg.text, msg.type));
+        chatHistories[username].forEach(msg => appendMessage(msg.text, msg.type, msg.status));
     }
 
     document.getElementById('message-input').disabled = false;
@@ -624,7 +657,7 @@ async function sendImage() {
     reader.readAsDataURL(file);
 }
 
-function appendMessage(text, type) {
+function appendMessage(text, type, status) {
     const messagesEl = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.className = `message ${type}`;
@@ -642,6 +675,22 @@ function appendMessage(text, type) {
         div.textContent = text;
     }
     
+    if (type === 'sent') {
+        const seenSpan = document.createElement('span');
+        seenSpan.className = 'seen-indicator';
+        if (status === 'seen') {
+            seenSpan.textContent = ' ✓✓';
+            seenSpan.style.color = '#34b7f1';
+        } else {
+            seenSpan.textContent = ' ✓';
+            // Default color logic, assuming light/dark mode css or simple gray
+            seenSpan.style.color = 'gray';
+        }
+        seenSpan.style.fontSize = '0.8rem';
+        seenSpan.style.marginLeft = '5px';
+        div.appendChild(seenSpan);
+    }
+
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 }
