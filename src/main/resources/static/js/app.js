@@ -1290,10 +1290,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
     // Stash the event so it can be triggered later.
     deferredPrompt = e;
     // Update UI notify the user they can install the PWA
-    const installBtn = document.getElementById('install-app-btn');
-    if (installBtn) {
-        installBtn.classList.remove('hidden');
-    }
+    const installBtns = document.querySelectorAll('.install-app-btn');
+    installBtns.forEach(btn => btn.classList.remove('hidden'));
 });
 
 async function installApp() {
@@ -1302,9 +1300,7 @@ async function installApp() {
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`User response to the install prompt: ${outcome}`);
         deferredPrompt = null;
-        const installBtn = document.getElementById('install-app-btn');
-        if (installBtn) {
-            installBtn.classList.add('hidden');
-        }
+        const installBtns = document.querySelectorAll('.install-app-btn');
+        installBtns.forEach(btn => btn.classList.add('hidden'));
     }
 }
