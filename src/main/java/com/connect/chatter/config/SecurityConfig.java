@@ -38,7 +38,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                     .requestMatchers("/ws/**").permitAll() // WebSockets have their own auth mechanism usually, or we can secure the handshake
-                    .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                    .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico", "/*.png", "/*.json", "/*.apk").permitAll()
                     .anyRequest().authenticated()
             );
 

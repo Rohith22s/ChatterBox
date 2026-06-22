@@ -49,7 +49,12 @@
                 <div class="avatar" id="my-avatar">U</div>
                 <div style="display:flex; flex-direction:column; justify-content:center;">
                     <span id="my-username" style="font-weight:bold;">Username</span>
-                    <span id="my-userid" style="font-size:0.7rem; color:var(--text-muted);">ID: 000000</span>
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span id="my-userid" style="font-size:0.7rem; color:var(--text-muted);">ID: 000000</span>
+                        <a href="/app-release.apk" download class="install-app-btn" style="background:#10b981; color:white; padding:4px; border-radius:4px; display:flex; align-items:center; justify-content:center; text-decoration:none; cursor:pointer;" title="Download Android App">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </a>
+                    </div>
                 </div>
                 <div id="mobile-bell-container" class="mobile-only" style="position:relative; margin-left:auto; cursor:pointer;" onclick="toggleMobileRequests()">
                     <span style="font-size:1.5rem;">🔔</span>
