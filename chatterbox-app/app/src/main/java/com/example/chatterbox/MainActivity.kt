@@ -44,7 +44,7 @@ fun ChatterboxWebView() {
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 webViewClient = WebViewClient()
                 // IMPORTANT: Replace this with your actual Render URL for production
-                loadUrl("http://10.0.2.2:8080")
+                loadUrl("https://chatterbox-lf06.onrender.com")
             }
         },
         update = { webView ->
